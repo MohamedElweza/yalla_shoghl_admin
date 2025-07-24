@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "789469943477",
+    "project_id": "yalla-shoghl-ba1e0",
+    "storage_bucket": "yalla-shoghl-ba1e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:789469943477:android:2d3aef2d17d979be4990fc",
+        "android_client_info": {
+          "package_name": "com.example.yalla_shogl_admin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "789469943477-m1e5elnd5amsgkt15n9hggkal6lcofks.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI4MY_-v1HuMhBs5HMsqn58MSYOxT6dQ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "789469943477-m1e5elnd5amsgkt15n9hggkal6lcofks.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "789469943477-ge4tjkl8hevkvg1672v0hfpibnd2rim6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.yallaShoghl"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:789469943477:android:acf6e7e72cca10df4990fc",
+        "android_client_info": {
+          "package_name": "com.yallashoghl.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "789469943477-3kj3jcdbuqfui1edjlhg1ksgd66clcbg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yallashoghl.app",
+            "certificate_hash": "1cfef372e611f9e25dc9b072f0a7ea7db27ae2f5"
+          }
+        },
+        {
+          "client_id": "789469943477-c94nt3kk8pmd0361ps1uj58ule81u1do.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yallashoghl.app",
+            "certificate_hash": "cff5c1253b65f799defad9c76d5789c7f26bfc0d"
+          }
+        },
+        {
+          "client_id": "789469943477-m1e5elnd5amsgkt15n9hggkal6lcofks.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI4MY_-v1HuMhBs5HMsqn58MSYOxT6dQ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "789469943477-m1e5elnd5amsgkt15n9hggkal6lcofks.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "789469943477-ge4tjkl8hevkvg1672v0hfpibnd2rim6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.yallaShoghl"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
