@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.yalla_shogl_admin.app"
+    namespace = "com.example.yalla_shogl_admin"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
@@ -45,3 +45,5 @@ android {
 flutter {
     source = "../.."
 }
+
+

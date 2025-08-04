@@ -3,8 +3,6 @@ import 'package:yalla_shogl_admin/screens/admin_subscriptions/admin_subscription
 import 'package:yalla_shogl_admin/screens/users_list/users_list_screen.dart';
 
 import '../../core/utils/app_colors.dart';
-import '../services/services_screen.dart';
-
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -34,12 +32,27 @@ class HomeScreen extends StatelessWidget {
             mainAxisSpacing: 16,
             children: [
               _AdminOptionCard(
-                title: 'الخدمات',
-                icon: Icons.design_services,
-                color: Colors.blueAccent,
+                title: 'عمال',
+                icon: Icons.engineering,
+                color: Colors.teal,
                 onTap: () {
-                  // TODO: Replace with ServicesAdminScreen
-                  _navigateTo(context, const ServicesScreen());
+                  _navigateTo(context, const UsersListScreen(showWorkers: true));
+                },
+              ),
+              _AdminOptionCard(
+                title: 'العملاء (البريد الشخصي)',
+                icon: Icons.person_outline,
+                color: Colors.deepPurple,
+                onTap: () {
+                  _navigateTo(context, const UsersListScreen(showWorkers: false));
+                },
+              ),
+              _AdminOptionCard(
+                title: 'الاشتراكات',
+                icon: Icons.campaign,
+                color: Colors.orangeAccent,
+                onTap: () {
+                  _navigateTo(context, const AdminSubscriptionsScreen());
                 },
               ),
               _AdminOptionCard(
@@ -48,16 +61,25 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.green,
                 onTap: () {
                   // TODO: Replace with UsersAdminScreen
-                  _navigateTo(context, UsersScreen());
+                  // _navigateTo(context, AdsScreen());
                 },
               ),
               _AdminOptionCard(
-                title: 'الاشتراكات',
-                icon: Icons.campaign,
-                color: Colors.orangeAccent,
+                title: 'الخدمات',
+                icon: Icons.design_services,
+                color: Colors.blue,
                 onTap: () {
-                  // TODO: Replace with AdsAdminScreen
-                  _navigateTo(context, const AdminSubscriptionsScreen());
+                  // TODO: Replace with UsersAdminScreen
+                  // _navigateTo(context, AdsScreen());
+                },
+              ),
+              _AdminOptionCard(
+                title: 'الطلبات المنتظرة',
+                icon: Icons.design_services,
+                color: Colors.brown,
+                onTap: () {
+                  // TODO: Replace with UsersAdminScreen
+                  // _navigateTo(context, AdsScreen());
                 },
               ),
             ],
@@ -106,23 +128,6 @@ class _AdminOptionCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// Temporary placeholder for navigation
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(title: Text(title), backgroundColor: AppColors.primaryPurple),
-        body: Center(child: Text('شاشة $title قيد التطوير')),
       ),
     );
   }
