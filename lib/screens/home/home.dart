@@ -3,6 +3,8 @@ import 'package:yalla_shogl_admin/screens/admin_subscriptions/admin_subscription
 import 'package:yalla_shogl_admin/screens/users_list/users_list_screen.dart';
 
 import '../../core/utils/app_colors.dart';
+import '../ads/ads_screen.dart';
+import '../services/services_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -60,8 +62,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.people,
                 color: Colors.green,
                 onTap: () {
-                  // TODO: Replace with UsersAdminScreen
-                  // _navigateTo(context, AdsScreen());
+                  _navigateTo(context, AdsScreen());
                 },
               ),
               _AdminOptionCard(
@@ -69,8 +70,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.design_services,
                 color: Colors.blue,
                 onTap: () {
-                  // TODO: Replace with UsersAdminScreen
-                  // _navigateTo(context, AdsScreen());
+                  _navigateTo(context, ServicesScreen());
                 },
               ),
               _AdminOptionCard(

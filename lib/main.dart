@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:yalla_shogl_admin/screens/home/home.dart';
+import 'package:yalla_shogl_admin/screens/registration/signin_screen.dart';
+import 'package:yalla_shogl_admin/screens/splash_screen/splash.dart';
+import 'core/providers/password_visibility_provider.dart';
 import 'core/utils/app_colors.dart';
 import 'firebase_options.dart';
 
@@ -13,7 +16,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(MyApp());
+  runApp(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PasswordVisibilityProvider()),
+      ],
+      child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -47,7 +54,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
