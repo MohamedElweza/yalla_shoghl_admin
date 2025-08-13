@@ -3,15 +3,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:yalla_shogl_admin/screens/users_list/user_detail_screen.dart';
 import '../../core/utils/app_colors.dart';
 
-class UsersListScreen extends StatelessWidget {
+class UsersListScreen extends StatefulWidget {
   final bool showWorkers;
 
   const UsersListScreen({super.key, required this.showWorkers});
 
   @override
-  Widget build(BuildContext context) {
-    final collection = showWorkers ? 'workers' : 'users';
+  State<UsersListScreen> createState() => _UsersListScreenState();
+}
 
+class _UsersListScreenState extends State<UsersListScreen> {
+  String searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final collection = widget.showWorkers ? 'workers' : 'users';
     final query = FirebaseFirestore.instance.collection(collection);
 
     return Directionality(
@@ -20,7 +26,7 @@ class UsersListScreen extends StatelessWidget {
         backgroundColor: AppColors.lightGreyBackground,
         appBar: AppBar(
           title: Text(
-            showWorkers ? 'قائمة العمال' : 'قائمة العملاء',
+            widget.showWorkers ? 'قائمة العمال' : 'قائمة العملاء',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.darkText,
@@ -30,42 +36,76 @@ class UsersListScreen extends StatelessWidget {
           backgroundColor: Colors.white,
           elevation: 0,
         ),
-        body: StreamBuilder<QuerySnapshot>(
-          stream: query.snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('حدث خطأ: ${snapshot.error}'));
-            }
-
-            final docs = snapshot.data?.docs ?? [];
-            if (docs.isEmpty) {
-              return Center(
-                child: Text(
-                  showWorkers ? 'لا يوجد عمال حالياً' : 'لا يوجد عملاء حالياً',
-                  style: Theme.of(context).textTheme.bodyLarge,
+        body: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'ابحث بالاسم...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-              );
-            }
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value.trim();
+                  });
+                },
+              ),
+            ),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: query.snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('حدث خطأ: ${snapshot.error}'));
+                  }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final data = docs[index].data() as Map<String, dynamic>;
-                final id = docs[index].id;
-                return _buildUserCard(context, data, id);
-              },
-            );
-          },
+                  final docs = snapshot.data?.docs ?? [];
+                  // فلترة حسب الاسم
+                  final filteredDocs = docs.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final name = (data['name'] ?? '').toString();
+                    return name.contains(searchQuery) || name.toLowerCase().contains(searchQuery.toLowerCase());
+                  }).toList();
+
+                  if (filteredDocs.isEmpty) {
+                    return Center(
+                      child: Text(
+                        widget.showWorkers ? 'لا يوجد عمال' : 'لا يوجد عملاء',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredDocs.length,
+                    itemBuilder: (context, index) {
+                      final data = filteredDocs[index].data() as Map<String, dynamic>;
+                      final id = filteredDocs[index].id;
+                      return _buildUserCard(context, data, id, widget.showWorkers);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildUserCard(
-      BuildContext context, Map<String, dynamic> user, String id) {
+  Widget _buildUserCard(BuildContext context, Map<String, dynamic> user, String id, bool showWorkers) {
     final name = user['name'] ?? 'بدون اسم';
     final phone = user['phone'] ?? 'غير متوفر';
     final imageUrl = user['imageUrl'] ?? '';
@@ -157,10 +197,8 @@ class UsersListScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text('الخدمة: $service',
-                        style: const TextStyle(fontSize: 12)),
-                    Text('عدد التقييمات: $ratingCount',
-                        style: const TextStyle(fontSize: 12)),
+                    Text('الخدمة: $service', style: const TextStyle(fontSize: 12)),
+                    Text('عدد التقييمات: $ratingCount', style: const TextStyle(fontSize: 12)),
                   ],
                 ],
               ),

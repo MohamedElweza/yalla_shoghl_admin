@@ -5,6 +5,7 @@ import 'package:yalla_shogl_admin/screens/users_list/users_list_screen.dart';
 import '../../core/utils/app_colors.dart';
 import '../ads/ads_screen.dart';
 import '../services/services_screen.dart';
+import '../waiting_list/waiting_list_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -79,7 +80,7 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.brown,
                 onTap: () {
                   // TODO: Replace with UsersAdminScreen
-                  // _navigateTo(context, AdsScreen());
+                  _navigateTo(context, PendingRequestsPage());
                 },
               ),
             ],
