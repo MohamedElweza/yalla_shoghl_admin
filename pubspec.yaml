@@ -82,7 +82,6 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets: # <--- THIS LINE WAS MIS-INDENTED. It needs to be indented 2 spaces under 'flutter:'
     - assets/images/
-    - assets/icons/
     - assets/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see

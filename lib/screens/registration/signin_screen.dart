@@ -36,12 +36,11 @@ class _SignInFormState extends State<SignInForm> {
 
   void showSnack(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
-
 
   Future<void> localSignIn() async {
     final email = emailController.text.trim();
@@ -74,7 +73,6 @@ class _SignInFormState extends State<SignInForm> {
     setState(() => isLoading = false);
   }
 
-
   @override
   void dispose() {
     emailController.dispose();
@@ -106,6 +104,7 @@ class _SignInFormState extends State<SignInForm> {
               hintText: 'كلمة السر',
               icon: Icons.lock_outline,
               isPassword: true,
+              textInputAction: TextInputAction.done,
               obscureText: !provider.isPasswordVisible,
               suffixIcon: IconButton(
                 icon: Icon(
@@ -128,30 +127,30 @@ class _SignInFormState extends State<SignInForm> {
         isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.mainColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.mainColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      onPressed: localSignIn,
+                      child: const Text(
+                        'تسجيل الدخول',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: localSignIn,
-                child: const Text(
-                  'تسجيل الدخول',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                ],
               ),
-            ),
-          ],
-        ),
         const SizedBox(height: 40),
       ],
     );
