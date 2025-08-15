@@ -1,5 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yalla_shogl_admin/screens/home/home.dart';
 import 'package:yalla_shogl_admin/screens/registration/signin_screen.dart';
 
@@ -18,15 +18,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    await Future.delayed(const Duration(seconds: 1)); // Optional delay
 
-    if (isLoggedIn) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // User is signed in
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
+      // User is not signed in
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const SignInScreen()),

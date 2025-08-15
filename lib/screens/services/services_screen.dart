@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:yalla_shogl_admin/screens/services/widgets/service_icon.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -48,6 +49,17 @@ class ServicesScreen extends StatelessWidget {
     'أخضر فاتح': Colors.lightGreen,
     'برتقالي فاتح': Colors.deepOrange,
   };
+
+  Future<bool> _checkInternet(BuildContext context) async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يوجد اتصال بالإنترنت')),
+      );
+      return false;
+    }
+    return true;
+  }
 
   void _showAddServiceDialog(BuildContext context) {
     final labelController = TextEditingController();
@@ -122,6 +134,8 @@ class ServicesScreen extends StatelessWidget {
                   onPressed: isLoading
                       ? null
                       : () async {
+                    if (!await _checkInternet(context)) return;
+
                     final label = labelController.text.trim();
                     if (label.isEmpty) return;
 
@@ -173,6 +187,8 @@ class ServicesScreen extends StatelessWidget {
                 onPressed: isDeleting
                     ? null
                     : () async {
+                  if (!await _checkInternet(context)) return;
+
                   setState(() => isDeleting = true);
                   await doc.reference.delete();
                   Navigator.pop(context);

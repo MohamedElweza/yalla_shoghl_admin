@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/waiting_list_screen.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/chip_label.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/form_date.dart';
@@ -51,7 +52,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         final isFirstTime = data['subscription']?['isFirstTime'];
         final avatarUrl = (data['profileImageUrl'] ?? data['imageUrl'] ?? '').toString();
         final createdAt = data['createdAt'];
-        final receiptImageUrl = (data['receiptImageUrl'] ?? '').toString();
+        final receiptImageUrl = (data['subscription']?['receiptImageUrl'] ?? '').toString();
 
         return SafeArea(
           child: Scaffold(
@@ -78,7 +79,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      onPressed: () => _updateStatus(context, widget.docRef, 'rejected'),
+                      onPressed: () => _showRejectionDialog(widget.docRef),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -90,7 +91,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      onPressed: () => _updateStatus(context, widget.docRef, 'active'),
+                      onPressed: () => _updateStatus(widget.docRef, 'active'),
                     ),
                   ),
                 ],
@@ -170,6 +171,18 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                           height: 200,
                           width: double.infinity,
                           fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                height: 200,
+                                width: double.infinity,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     )
@@ -184,10 +197,40 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     );
   }
 
-  Future<void> _updateStatus(BuildContext context, DocumentReference<Map<String, dynamic>> ref, String newStatus) async {
-    setState(() {
-      isUpdating = true;
-    });
+  Future<void> _showRejectionDialog(DocumentReference<Map<String, dynamic>> ref) async {
+    final TextEditingController reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('سبب الرفض'),
+        content: TextField(
+          controller: reasonController,
+          decoration: const InputDecoration(
+            hintText: 'أدخل سبب الرفض هنا',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حفظ', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final reason = reasonController.text.trim();
+    await _updateStatus(ref, 'rejected', reason: reason);
+  }
+
+  Future<void> _updateStatus(DocumentReference<Map<String, dynamic>> ref, String newStatus, {String? reason}) async {
+    setState(() => isUpdating = true);
     try {
       await FirebaseFirestore.instance.runTransaction((tx) async {
         final snap = await tx.get(ref);
@@ -198,6 +241,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         if (newStatus == 'active' && sub['startDate'] == null) {
           sub['startDate'] = Timestamp.now();
         }
+        if (reason != null && reason.isNotEmpty) {
+          sub['rejectionReason'] = reason;
+        }
         tx.update(ref, {'subscription': sub});
       });
 
@@ -205,7 +251,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(newStatus == 'active' ? 'تم قبول الطلب' : 'تم رفض الطلب')),
         );
+        Navigator.pop(context);
       }
+
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -214,10 +262,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          isUpdating = false;
-        });
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) =>  PendingRequestsPage()));
+        setState(() => isUpdating = false);
       }
     }
   }

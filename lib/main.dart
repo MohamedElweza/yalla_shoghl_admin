@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yalla_shogl_admin/screens/home/home.dart';
 import 'package:yalla_shogl_admin/screens/registration/signin_screen.dart';
 import 'package:yalla_shogl_admin/screens/splash_screen/splash.dart';
+import 'core/constants/app_constants.dart';
 import 'core/providers/password_visibility_provider.dart';
 import 'core/utils/app_colors.dart';
 import 'firebase_options.dart';
@@ -15,6 +17,11 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await Supabase.initialize(
+    url: AppConstants.urlSupabase,
+    anonKey: AppConstants.anonKey,
+  );
 
   runApp(MultiProvider(
       providers: [

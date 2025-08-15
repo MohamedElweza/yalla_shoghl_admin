@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:yalla_shogl_admin/screens/home/home.dart';
 import 'package:yalla_shogl_admin/screens/registration/widgets/custom_text_field.dart';
 import '../../core/providers/password_visibility_provider.dart';
@@ -42,8 +43,8 @@ class _SignInFormState extends State<SignInForm> {
     }
   }
 
-
-  Future<void> localSignIn() async {
+  /// 🔑 Firebase Sign-In
+  Future<void> firebaseSignIn() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
@@ -54,26 +55,41 @@ class _SignInFormState extends State<SignInForm> {
 
     setState(() => isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 1)); // Simulate delay
+    try {
+      // Sign in with Firebase
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    if (email != 'admin@gmail.com') {
-      showSnack('البريد الإلكتروني غير صحيح');
-    } else if (password != 'admin1234') {
-      showSnack('كلمة المرور غير صحيحة');
-    } else {
-      // Save login status
+      // Save login status locally
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
 
+      // Navigate to Home
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+
+      if (e.code == 'user-not-found') {
+        errorMessage = 'المستخدم غير موجود';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'كلمة المرور غير صحيحة';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'البريد الإلكتروني غير صالح';
+      }
+
+      showSnack(errorMessage);
+    } catch (e) {
+      showSnack('فشل تسجيل الدخول: $e');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-
-    setState(() => isLoading = false);
   }
-
 
   @override
   void dispose() {
@@ -139,7 +155,7 @@ class _SignInFormState extends State<SignInForm> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: localSignIn,
+                onPressed: firebaseSignIn,
                 child: const Text(
                   'تسجيل الدخول',
                   style: TextStyle(
