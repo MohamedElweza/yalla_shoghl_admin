@@ -57,6 +57,15 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
     }
   }
 
+  Future<void> _editMonths(String docId, int newMonths) async {
+    _showLoadingDialog();
+    try {
+      await plansRef.doc(docId).update({'months': newMonths});
+    } finally {
+      Navigator.pop(context);
+    }
+  }
+
   Future<void> _deleteSubscription(String docId) async {
     _showLoadingDialog();
     try {
@@ -104,6 +113,37 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
               if (price != null) {
                 Navigator.pop(context);
                 await _editSubscription(docId, price);
+                setState(() {});
+              }
+            },
+            child: const Text('حفظ', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditMonthsDialog(String docId, String title, int currentMonths) {
+    final controller = TextEditingController(text: currentMonths.toString());
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('تعديل مدة التجربة المجانية - $title'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'عدد الشهور'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+            onPressed: () async {
+              final months = int.tryParse(controller.text);
+              if (months != null && months > 0) {
+                Navigator.pop(context);
+                await _editMonths(docId, months);
                 setState(() {});
               }
             },
@@ -193,6 +233,8 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
             itemBuilder: (_, index) {
               final doc = docs[index];
               final data = doc.data() as Map<String, dynamic>;
+              final isFree = data['title'] == 'مجاني';
+
               return Card(
                 color: AppColors.primaryPurple,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -216,12 +258,25 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text('${data['price']} جنيه', style: const TextStyle(color: Colors.white)),
+                            isFree
+                                ? Text('${data['months']} شهر', style: const TextStyle(color: Colors.white))
+                                : Text('${data['price']} جنيه', style: const TextStyle(color: Colors.white)),
                           ],
                         ),
                         Column(
                           children: [
-                            ElevatedButton.icon(
+                            isFree
+                                ? ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppColors.primaryPurple,
+                                minimumSize: const Size.fromHeight(36),
+                              ),
+                              onPressed: () => _showEditMonthsDialog(doc.id, data['title'], data['months'] ?? 1),
+                              icon: const Icon(Icons.edit_calendar),
+                              label: const Text('تعديل الأشهر'),
+                            )
+                                : ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: AppColors.primaryPurple,
