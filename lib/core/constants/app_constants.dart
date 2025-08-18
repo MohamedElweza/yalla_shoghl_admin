@@ -43,4 +43,8 @@ class AppConstants {
   static const String user1Avatar = 'assets/user1_avatar.jpg';
   static const String user2Avatar = 'assets/user2_avatar.jpg';
   static const String user3Avatar = 'assets/user3_avatar.jpg';
+
+  static const String urlSupabase = 'https://ccnlpcqmtalujgxgudhf.supabase.co';
+  static const String anonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbmxwY3FtdGFsdWpneGd1ZGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NDE1MzEsImV4cCI6MjA3MDUxNzUzMX0.f0s7PmF7mRDmBHcSCcBYwkwpen3WxsXYMynTtp-A9NY';
 }

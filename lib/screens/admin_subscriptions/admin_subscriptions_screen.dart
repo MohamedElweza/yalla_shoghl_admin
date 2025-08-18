@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/utils/app_colors.dart';
 
 class AdminSubscriptionsScreen extends StatefulWidget {
@@ -11,15 +13,38 @@ class AdminSubscriptionsScreen extends StatefulWidget {
 
 class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
   final CollectionReference plansRef = FirebaseFirestore.instance.collection('plans');
-  bool _isLoading = false;
+  bool _isConnected = true;
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInitialConnection();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+      setState(() {
+        _isConnected = results.any((r) => r != ConnectivityResult.none);
+      });
+    });
+  }
+
+  Future<void> _checkInitialConnection() async {
+    final result = await Connectivity().checkConnectivity();
+    setState(() {
+      _isConnected = result != ConnectivityResult.none;
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
 
   void _showLoadingDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -28,7 +53,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
     try {
       await plansRef.doc(docId).update({'price': newPrice});
     } finally {
-      Navigator.pop(context); // remove loading
+      Navigator.pop(context);
     }
   }
 
@@ -37,7 +62,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
     try {
       await plansRef.doc(docId).delete();
     } finally {
-      Navigator.pop(context); // remove loading
+      Navigator.pop(context);
     }
   }
 
@@ -54,7 +79,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         'discount': discount,
       });
     } finally {
-      Navigator.pop(context); // remove loading
+      Navigator.pop(context);
     }
   }
 
@@ -67,7 +92,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         title: Text('تعديل السعر - $title'),
         content: TextField(
           controller: controller,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(labelText: 'السعر بالجنيه'),
         ),
         actions: [
@@ -77,7 +102,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
             onPressed: () async {
               final price = double.tryParse(controller.text);
               if (price != null) {
-                Navigator.pop(context); // close dialog
+                Navigator.pop(context);
                 await _editSubscription(docId, price);
                 setState(() {});
               }
@@ -104,7 +129,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
             TextField(
               controller: priceController,
               decoration: const InputDecoration(labelText: 'السعر'),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
         ),
@@ -116,7 +141,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
               final title = titleController.text.trim();
               final price = double.tryParse(priceController.text.trim());
               if (title.isNotEmpty && price != null) {
-                Navigator.pop(context); // close dialog
+                Navigator.pop(context);
                 await _addSubscription(title, price);
                 setState(() {});
               }
@@ -139,9 +164,11 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
         backgroundColor: AppColors.primaryPurple,
-        child: const Icon(Icons.add, color: Colors.white,),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: !_isConnected
+          ? const Center(child: Text('⚠ لا يوجد اتصال بالإنترنت', style: TextStyle(fontSize: 16)))
+          : StreamBuilder<QuerySnapshot>(
         stream: plansRef.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -149,6 +176,10 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
           }
 
           final docs = snapshot.data?.docs ?? [];
+
+          if (docs.isEmpty) {
+            return const Center(child: Text('لا توجد اشتراكات'));
+          }
 
           return GridView.builder(
             padding: const EdgeInsets.all(16),
@@ -186,11 +217,6 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text('${data['price']} جنيه', style: const TextStyle(color: Colors.white)),
-                            // if ((data['discount'] ?? 0) > 0)
-                            //   Text(
-                            //     'خصم ${data['discount'].toStringAsFixed(2)} جنيه',
-                            //     style: const TextStyle(color: Colors.greenAccent),
-                            //   ),
                           ],
                         ),
                         Column(

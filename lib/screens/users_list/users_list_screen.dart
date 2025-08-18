@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+
 import 'package:yalla_shogl_admin/screens/users_list/user_detail_screen.dart';
 import '../../core/utils/app_colors.dart';
 
@@ -14,6 +17,50 @@ class UsersListScreen extends StatefulWidget {
 
 class _UsersListScreenState extends State<UsersListScreen> {
   String searchQuery = '';
+  bool _hasInternet = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInternetOnStart();
+    _listenToInternetChanges();
+  }
+
+  /// Initial check
+  Future<void> _checkInternetOnStart() async {
+    bool connected = await _checkInternet();
+    setState(() => _hasInternet = connected);
+  }
+
+  /// Listen for changes
+  void _listenToInternetChanges() {
+    Connectivity().onConnectivityChanged.listen((_) async {
+      bool connected = await _checkInternet();
+      if (!mounted) return;
+      setState(() => _hasInternet = connected);
+
+      if (!connected) {
+        _showNoInternetMessage();
+      }
+    });
+  }
+
+  /// Actual check
+  Future<bool> _checkInternet() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+    return await InternetConnectionChecker.instance.hasConnection;
+  }
+
+  void _showNoInternetMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('⚠ لا يوجد اتصال بالإنترنت'),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +83,14 @@ class _UsersListScreenState extends State<UsersListScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
         ),
-        body: Column(
+        body: !_hasInternet
+            ? const Center(
+          child: Text(
+            '⚠ لا يوجد اتصال بالإنترنت',
+            style: TextStyle(fontSize: 18, color: Colors.red),
+          ),
+        )
+            : Column(
           children: [
             // Search bar
             Padding(
@@ -71,11 +125,12 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   }
 
                   final docs = snapshot.data?.docs ?? [];
-                  // فلترة حسب الاسم
+                  // Filter by name
                   final filteredDocs = docs.where((doc) {
                     final data = doc.data() as Map<String, dynamic>;
                     final name = (data['name'] ?? '').toString();
-                    return name.contains(searchQuery) || name.toLowerCase().contains(searchQuery.toLowerCase());
+                    return name.contains(searchQuery) ||
+                        name.toLowerCase().contains(searchQuery.toLowerCase());
                   }).toList();
 
                   if (filteredDocs.isEmpty) {

@@ -1,12 +1,79 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AdsScreen extends StatelessWidget {
+class AdsScreen extends StatefulWidget {
   const AdsScreen({super.key});
 
   @override
+  State<AdsScreen> createState() => _AdsScreenState();
+}
+
+class _AdsScreenState extends State<AdsScreen> {
+  bool _isConnected = true;
+  bool _isAdding = false;
+
+  final supabase = Supabase.instance.client;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInternetConnection();
+  }
+
+  void _checkInternetConnection() {
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      setState(() {
+        _isConnected = !results.contains(ConnectivityResult.none);
+      });
+    });
+  }
+
+  /// Uploads image to Supabase Storage and returns the public URL
+  Future<String?> _uploadImageToSupabase(File file, String folderName) async {
+    try {
+      final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+      final filePath = "$folderName/$fileName";
+
+      await supabase.storage.from("yalla.shogl").upload(filePath, file);
+
+      final publicUrl = supabase.storage.from("yalla.shogl").getPublicUrl(filePath);
+      return publicUrl;
+    } catch (e) {
+      debugPrint("Upload error: $e");
+      return null;
+    }
+  }
+
+  /// Get receipt image from Supabase using document ID
+  Future<String?> _getReceiptImageUrl(String docId) async {
+    try {
+      final filePath = "receipt/$docId.jpg";
+      return supabase.storage.from("yalla.shogl").getPublicUrl(filePath);
+    } catch (e) {
+      debugPrint("Error getting receipt: $e");
+      return null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_isConnected) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('الإعلانات')),
+        body: const Center(
+          child: Text(
+            'لا يوجد اتصال بالإنترنت',
+            style: TextStyle(fontSize: 18, color: Colors.red),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('الإعلانات'),
@@ -63,7 +130,7 @@ class AdsScreen extends StatelessWidget {
                             ],
                           ),
                           GestureDetector(
-                            onTap: () {}, // يمكن فتحه في WebView أو المتصفح
+                            onTap: () {}, // open in browser
                             child: Text(
                               'Link: $externalUrl',
                               style: const TextStyle(
@@ -99,11 +166,11 @@ class AdsScreen extends StatelessWidget {
                                           baseColor: Colors.grey.shade300,
                                           highlightColor: Colors.grey.shade100,
                                           child: Container(
-                                            width: 80,
-                                            height: 80,
+                                            width: double.infinity,
+                                            height: double.infinity,
                                             decoration: BoxDecoration(
                                               color: Colors.white,
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius: BorderRadius.circular(10),
                                             ),
                                           ),
                                         );
@@ -154,58 +221,132 @@ class AdsScreen extends StatelessWidget {
   void _showAddAdDialog(BuildContext context) {
     final idController = TextEditingController();
     final linkController = TextEditingController();
-    final imageController = TextEditingController();
+
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return AlertDialog(
+              title: const Text('إضافة إعلان جديد'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: idController,
+                    decoration: const InputDecoration(labelText: 'اسم الإعلان'),
+                  ),
+                  TextField(
+                    controller: linkController,
+                    decoration: const InputDecoration(labelText: 'رابط الإعلان'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('إلغاء'),
+                ),
+                ElevatedButton(
+                  onPressed: _isAdding
+                      ? null
+                      : () async {
+                    if (idController.text.isEmpty || linkController.text.isEmpty) return;
+
+                    setState(() => _isAdding = true);
+
+                    final newAd = {
+                      'imageUrls': [
+                        {
+                          'id': idController.text.trim(),
+                          'externalUrl': linkController.text.trim(),
+                          'imgUrl': []
+                        }
+                      ]
+                    };
+
+                    await FirebaseFirestore.instance.collection('ads').add(newAd);
+
+                    setState(() => _isAdding = false);
+                    Navigator.pop(ctx);
+                  },
+                  child: _isAdding
+                      ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Text('إضافة'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  void _showAddImageDialog(BuildContext context, String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup) {
+    final linkController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('إضافة إعلان جديد'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: idController,
-                decoration: const InputDecoration(labelText: 'ID الإعلان'),
-              ),
-              TextField(
-                controller: linkController,
-                decoration: const InputDecoration(labelText: 'رابط الإعلان'),
-              ),
-              TextField(
-                controller: imageController,
-                decoration: const InputDecoration(labelText: 'رابط الصورة الأولى'),
-              ),
-            ],
-          ),
+        title: const Text('إضافة صورة'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              icon: const Icon(Icons.photo),
+              label: const Text("اختيار من الجهاز"),
+              onPressed: () async {
+                final picker = ImagePicker();
+                final picked = await picker.pickImage(source: ImageSource.gallery);
+                if (picked != null) {
+                  final file = File(picked.path);
+                  final url = await _uploadImageToSupabase(file, "ads");
+                  if (url != null) {
+                    _saveImageUrlToFirestore(docId, imageGroups, targetGroup, url);
+                  }
+                }
+                Navigator.pop(ctx);
+              },
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: linkController,
+              decoration: const InputDecoration(hintText: 'أدخل رابط الصورة'),
+            ),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
           ElevatedButton(
-            onPressed: () async {
-              final id = idController.text.trim();
-              final link = linkController.text.trim();
-              final img = imageController.text.trim();
-
-              if (id.isEmpty || link.isEmpty || img.isEmpty) return;
-
-              final newAd = {
-                'imageUrls': [
-                  {
-                    'id': id,
-                    'externalUrl': link,
-                    'imgUrl': [img],
-                  }
-                ]
-              };
-
-              await FirebaseFirestore.instance.collection('ads').add(newAd);
+            onPressed: () {
+              if (linkController.text.isNotEmpty) {
+                _saveImageUrlToFirestore(docId, imageGroups, targetGroup, linkController.text.trim());
+              }
               Navigator.pop(ctx);
             },
-            child: const Text('إضافة'),
+            child: const Text('حفظ'),
           ),
         ],
       ),
     );
+  }
+
+  void _saveImageUrlToFirestore(String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup, String url) async {
+    final updatedGroup = Map<String, dynamic>.from(targetGroup);
+    final updatedImages = List<String>.from(updatedGroup['imgUrl'] ?? [])..add(url);
+    updatedGroup['imgUrl'] = updatedImages;
+
+    final updatedGroups = imageGroups.map((g) => g == targetGroup ? updatedGroup : g).toList();
+    await FirebaseFirestore.instance.collection('ads').doc(docId).update({'imageUrls': updatedGroups});
   }
 
   void _deleteAd(BuildContext context, String docId) async {
@@ -224,39 +365,6 @@ class AdsScreen extends StatelessWidget {
     if (confirmed == true) {
       await FirebaseFirestore.instance.collection('ads').doc(docId).delete();
     }
-  }
-
-  void _showAddImageDialog(BuildContext context, String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup) {
-    final imageUrlController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('إضافة صورة'),
-        content: TextField(
-          controller: imageUrlController,
-          decoration: const InputDecoration(hintText: 'أدخل رابط الصورة'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
-          ElevatedButton(
-            onPressed: () async {
-              final newImage = imageUrlController.text.trim();
-              if (newImage.isNotEmpty) {
-                final updatedGroup = Map<String, dynamic>.from(targetGroup);
-                final updatedImages = List<String>.from(updatedGroup['imgUrl'] ?? [])..add(newImage);
-                updatedGroup['imgUrl'] = updatedImages;
-
-                final updatedGroups = imageGroups.map((g) => g == targetGroup ? updatedGroup : g).toList();
-                await FirebaseFirestore.instance.collection('ads').doc(docId).update({'imageUrls': updatedGroups});
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('حفظ'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _deleteImage(BuildContext context, String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup, int indexToRemove) async {
@@ -282,4 +390,3 @@ class AdsScreen extends StatelessWidget {
     }
   }
 }
-

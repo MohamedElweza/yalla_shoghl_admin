@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/utils/app_colors.dart';
 
 class UserDetailScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   final Map<String, TextEditingController> controllers = {};
   Map<String, dynamic>? userData;
   bool isLoading = true;
-  bool isProcessing = false; // ✅ For update/delete loading indicator
+  bool isProcessing = false;
 
   @override
   void initState() {
@@ -29,18 +29,42 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     _loadUserData();
   }
 
+  Future<bool> _checkInternet() async {
+    final results = await Connectivity().checkConnectivity();
+    if (results.contains(ConnectivityResult.none)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ لا يوجد اتصال بالإنترنت')),
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _loadUserData() async {
-    final doc = await FirebaseFirestore.instance
-        .collection(widget.isWorker ? 'workers' : 'users')
-        .doc(widget.userId)
-        .get();
+    if (!await _checkInternet()) {
+      setState(() => isLoading = false);
+      return;
+    }
 
-    userData = doc.data() ?? {};
-    _initializeControllers(userData!);
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection(widget.isWorker ? 'workers' : 'users')
+          .doc(widget.userId)
+          .get();
 
-    setState(() {
-      isLoading = false;
-    });
+      userData = doc.data() ?? {};
+      _initializeControllers(userData!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ فشل تحميل البيانات: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   void _initializeControllers(Map<String, dynamic> data) {
@@ -50,17 +74,11 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     controllers['bio'] = TextEditingController(text: data['bio'] ?? '');
     controllers['cityName'] = TextEditingController(text: data['cityName'] ?? '');
     controllers['governorateName'] = TextEditingController(text: data['governorateName'] ?? '');
-    controllers['service'] = TextEditingController(
-      text: (data['services'] is List && data['services'].isNotEmpty)
-          ? (data['services'][0]['name'] ?? '')
-          : '',
-    );
-    controllers['rating'] = TextEditingController(
-      text: (data['rating'] ?? 0).toString(),
-    );
   }
 
   Future<void> _updateUser() async {
+    if (!await _checkInternet()) return;
+
     setState(() => isProcessing = true);
 
     try {
@@ -74,13 +92,6 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         updatedData['bio'] = controllers['bio']?.text.trim();
         updatedData['cityName'] = controllers['cityName']?.text.trim();
         updatedData['governorateName'] = controllers['governorateName']?.text.trim();
-        updatedData['rating'] = (double.tryParse(controllers['rating']?.text ?? '0') ?? 0).toString();
-
-        if (userData?['services'] is List && userData!['services'].isNotEmpty) {
-          final services = List<Map<String, dynamic>>.from(userData!['services']);
-          services[0]['name'] = controllers['service']?.text.trim();
-          updatedData['services'] = jsonEncode(services);
-        }
       }
 
       await FirebaseFirestore.instance
@@ -103,6 +114,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Future<void> _deleteUser() async {
+    if (!await _checkInternet()) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -124,26 +137,6 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     if (confirmed != true) return;
 
     setState(() => isProcessing = true);
-
-    try {
-      await FirebaseFirestore.instance
-          .collection(widget.isWorker ? 'workers' : 'users')
-          .doc(widget.userId)
-          .delete();
-
-      if (!mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🗑️ تم حذف المستخدم')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل الحذف: $e')),
-      );
-    } finally {
-      if (mounted) setState(() => isProcessing = false);
-    }
   }
 
   @override
@@ -190,10 +183,6 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   _buildTextField('cityName', 'المدينة'),
                   const SizedBox(height: 12),
                   _buildTextField('governorateName', 'المحافظة'),
-                  const SizedBox(height: 12),
-                  _buildTextField('service', 'اسم الخدمة'),
-                  const SizedBox(height: 12),
-                  _buildTextField('rating', 'التقييم', keyboardType: TextInputType.number),
                   const SizedBox(height: 12),
                 ],
                 const SizedBox(height: 20),
