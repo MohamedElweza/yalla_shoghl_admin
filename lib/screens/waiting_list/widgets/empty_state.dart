@@ -8,11 +8,21 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox_outlined, size: 72, color: Theme.of(context).colorScheme.outline),
+          Icon(
+            Icons.inbox_outlined,
+            size: 72,
+            color: Theme.of(context).colorScheme.outline,
+          ),
           const SizedBox(height: 12),
-          Text('لا توجد طلبات معلّقة', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'لا توجد طلبات معلّقة',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
-          Text('عندما يرسل المستخدمون طلبات جديدة ستظهر هنا', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'عندما يرسل المستخدمون طلبات جديدة ستظهر هنا',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );

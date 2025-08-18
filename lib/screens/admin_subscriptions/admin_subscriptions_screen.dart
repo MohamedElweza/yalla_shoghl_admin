@@ -8,11 +8,14 @@ class AdminSubscriptionsScreen extends StatefulWidget {
   const AdminSubscriptionsScreen({super.key});
 
   @override
-  State<AdminSubscriptionsScreen> createState() => _AdminSubscriptionsScreenState();
+  State<AdminSubscriptionsScreen> createState() =>
+      _AdminSubscriptionsScreenState();
 }
 
 class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
-  final CollectionReference plansRef = FirebaseFirestore.instance.collection('plans');
+  final CollectionReference plansRef = FirebaseFirestore.instance.collection(
+    'plans',
+  );
   bool _isConnected = true;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
 
@@ -20,7 +23,9 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
   void initState() {
     super.initState();
     _checkInitialConnection();
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      results,
+    ) {
       setState(() {
         _isConnected = results.any((r) => r != ConnectivityResult.none);
       });
@@ -105,9 +110,14 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
           decoration: const InputDecoration(labelText: 'السعر بالجنيه'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
             onPressed: () async {
               final price = double.tryParse(controller.text);
               if (price != null) {
@@ -136,9 +146,14 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
           decoration: const InputDecoration(labelText: 'عدد الشهور'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
             onPressed: () async {
               final months = int.tryParse(controller.text);
               if (months != null && months > 0) {
@@ -165,18 +180,28 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: titleController, decoration: const InputDecoration(labelText: 'الاسم')),
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'الاسم'),
+            ),
             TextField(
               controller: priceController,
               decoration: const InputDecoration(labelText: 'السعر'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
             onPressed: () async {
               final title = titleController.text.trim();
               final price = double.tryParse(priceController.text.trim());
@@ -197,7 +222,10 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إدارة الاشتراكات', style: TextStyle(color: Colors.black)),
+        title: const Text(
+          'إدارة الاشتراكات',
+          style: TextStyle(color: Colors.black),
+        ),
         elevation: 2,
         centerTitle: true,
       ),
@@ -207,110 +235,146 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: !_isConnected
-          ? const Center(child: Text('⚠ لا يوجد اتصال بالإنترنت', style: TextStyle(fontSize: 16)))
+          ? const Center(
+              child: Text(
+                '⚠ لا يوجد اتصال بالإنترنت',
+                style: TextStyle(fontSize: 16),
+              ),
+            )
           : StreamBuilder<QuerySnapshot>(
-        stream: plansRef.snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              stream: plansRef.snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final docs = snapshot.data?.docs ?? [];
+                final docs = snapshot.data?.docs ?? [];
 
-          if (docs.isEmpty) {
-            return const Center(child: Text('لا توجد اشتراكات'));
-          }
+                if (docs.isEmpty) {
+                  return const Center(child: Text('لا توجد اشتراكات'));
+                }
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 3 / 4,
-            ),
-            itemBuilder: (_, index) {
-              final doc = docs[index];
-              final data = doc.data() as Map<String, dynamic>;
-              final isFree = data['title'] == 'مجاني';
-
-              return Card(
-                color: AppColors.primaryPurple,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          children: [
-                            const Icon(Icons.payments_rounded, size: 36, color: Colors.white),
-                            const SizedBox(height: 8),
-                            Text(
-                              data['title'],
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            isFree
-                                ? Text('${data['months']} شهر', style: const TextStyle(color: Colors.white))
-                                : Text('${data['price']} جنيه', style: const TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            isFree
-                                ? ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primaryPurple,
-                                minimumSize: const Size.fromHeight(36),
-                              ),
-                              onPressed: () => _showEditMonthsDialog(doc.id, data['title'], data['months'] ?? 1),
-                              icon: const Icon(Icons.edit_calendar),
-                              label: const Text('تعديل الأشهر'),
-                            )
-                                : ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primaryPurple,
-                                minimumSize: const Size.fromHeight(36),
-                              ),
-                              onPressed: () => _showEditDialog(doc.id, data['title'], data['price']),
-                              icon: const Icon(Icons.edit),
-                              label: const Text('تعديل'),
-                            ),
-                            const SizedBox(height: 6),
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size.fromHeight(36),
-                              ),
-                              onPressed: () async {
-                                await _deleteSubscription(doc.id);
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.delete),
-                              label: const Text('حذف'),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: docs.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 3 / 4,
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                  itemBuilder: (_, index) {
+                    final doc = docs[index];
+                    final data = doc.data() as Map<String, dynamic>;
+                    final isFree = data['title'] == 'مجاني';
+
+                    return Card(
+                      color: AppColors.primaryPurple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                children: [
+                                  const Icon(
+                                    Icons.payments_rounded,
+                                    size: 36,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    data['title'],
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  isFree
+                                      ? Text(
+                                          '${data['months']} شهر',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          '${data['price']} جنيه',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  isFree
+                                      ? ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor:
+                                                AppColors.primaryPurple,
+                                            minimumSize: const Size.fromHeight(
+                                              36,
+                                            ),
+                                          ),
+                                          onPressed: () =>
+                                              _showEditMonthsDialog(
+                                                doc.id,
+                                                data['title'],
+                                                data['months'] ?? 1,
+                                              ),
+                                          icon: const Icon(Icons.edit_calendar),
+                                          label: const Text('تعديل الأشهر'),
+                                        )
+                                      : ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor:
+                                                AppColors.primaryPurple,
+                                            minimumSize: const Size.fromHeight(
+                                              36,
+                                            ),
+                                          ),
+                                          onPressed: () => _showEditDialog(
+                                            doc.id,
+                                            data['title'],
+                                            data['price'],
+                                          ),
+                                          icon: const Icon(Icons.edit),
+                                          label: const Text('تعديل'),
+                                        ),
+                                  const SizedBox(height: 6),
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size.fromHeight(36),
+                                    ),
+                                    onPressed: () async {
+                                      await _deleteSubscription(doc.id);
+                                      setState(() {});
+                                    },
+                                    icon: const Icon(Icons.delete),
+                                    label: const Text('حذف'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }

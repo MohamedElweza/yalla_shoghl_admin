@@ -8,7 +8,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
-  final TextInputAction  textInputAction;
+  final TextInputAction textInputAction;
 
   const CustomTextField({
     super.key,
@@ -19,7 +19,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.validator,
-    this.textInputAction =TextInputAction.next
+    this.textInputAction = TextInputAction.next,
   });
 
   @override
@@ -28,7 +28,8 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: isPassword ? obscureText : false,
       validator: validator,
-      keyboardType: TextInputType.emailAddress,textInputAction:textInputAction ,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: textInputAction,
       decoration: InputDecoration(
         hintText: hintText,
         prefixIcon: Icon(icon),

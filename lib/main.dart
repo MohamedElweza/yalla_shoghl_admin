@@ -12,9 +12,7 @@ import 'core/providers/password_visibility_provider.dart';
 import 'core/utils/app_colors.dart';
 import 'firebase_options.dart';
 
-
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -23,15 +21,18 @@ void main() async {
     anonKey: AppConstants.anonKey,
   );
 
-  runApp(MultiProvider(
+  runApp(
+    MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => PasswordVisibilityProvider()),
       ],
-      child: MyApp()));
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key,});
+  const MyApp({super.key});
 
   static const title = 'ادارة يلا شغل';
 

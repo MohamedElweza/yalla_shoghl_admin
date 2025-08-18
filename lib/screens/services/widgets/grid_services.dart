@@ -44,7 +44,9 @@ class ServicesGrid extends StatelessWidget {
               fontFamily: 'MaterialIcons',
             );
 
-            final color = Color(data['colorValue'] ?? 0xFF9E9E9E); // Default grey
+            final color = Color(
+              data['colorValue'] ?? 0xFF9E9E9E,
+            ); // Default grey
             final label = data['label'] ?? 'بدون اسم';
 
             return ServiceIcon(

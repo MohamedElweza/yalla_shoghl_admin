@@ -66,8 +66,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '789469943477',
     projectId: 'yalla-shoghl-ba1e0',
     storageBucket: 'yalla-shoghl-ba1e0.firebasestorage.app',
-    androidClientId: '789469943477-3kj3jcdbuqfui1edjlhg1ksgd66clcbg.apps.googleusercontent.com',
-    iosClientId: '789469943477-dllg8s6ao0vfnandvp52b07ue7i5c6me.apps.googleusercontent.com',
+    androidClientId:
+        '789469943477-3kj3jcdbuqfui1edjlhg1ksgd66clcbg.apps.googleusercontent.com',
+    iosClientId:
+        '789469943477-dllg8s6ao0vfnandvp52b07ue7i5c6me.apps.googleusercontent.com',
     iosBundleId: 'com.example.yallaShoglAdmin',
   );
 

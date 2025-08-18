@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:yalla_shogl_admin/screens/waiting_list/waiting_list_screen.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/chip_label.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/form_date.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/glass_card.dart';
@@ -20,6 +19,12 @@ class RequestDetailsPage extends StatefulWidget {
 
 class _RequestDetailsPageState extends State<RequestDetailsPage> {
   bool isUpdating = false;
+  final TextEditingController reasonController = TextEditingController();
+  @override
+  void dispose() {
+    reasonController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +32,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       stream: widget.docRef.snapshots(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         if (!snap.hasData || !snap.data!.exists) {
           return SafeArea(
@@ -44,15 +51,18 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         final phone = (data['phone'] ?? '').toString();
         final bio = (data['bio'] ?? '').toString();
         final city = (data['city'] ?? data['cityName'] ?? '').toString();
-        final state = (data['state'] ?? data['governorateName'] ?? '').toString();
+        final state = (data['state'] ?? data['governorateName'] ?? '')
+            .toString();
         final country = (data['country'] ?? '').toString();
         final type = (data['type'] ?? '').toString();
         final plan = (data['subscription']?['plan'] ?? '').toString();
         final status = (data['subscription']?['status'] ?? '').toString();
         final isFirstTime = data['subscription']?['isFirstTime'];
-        final avatarUrl = (data['profileImageUrl'] ?? data['imageUrl'] ?? '').toString();
+        final avatarUrl = (data['profileImageUrl'] ?? data['imageUrl'] ?? '')
+            .toString();
         final createdAt = data['createdAt'];
-        final receiptImageUrl = (data['subscription']?['receiptImageUrl'] ?? '').toString();
+        final receiptImageUrl = (data['subscription']?['receiptImageUrl'] ?? '')
+            .toString();
 
         return SafeArea(
           child: Scaffold(
@@ -70,32 +80,38 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
               child: isUpdating
                   ? const Center(child: CircularProgressIndicator())
                   : Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.close),
-                      label: const Text('رفض'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () => _showRejectionDialog(widget.docRef),
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.close),
+                            label: const Text('رفض'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: () =>
+                                _showRejectionDialog(widget.docRef),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.icon(
+                            icon: const Icon(Icons.check),
+                            label: const Text('قبول'),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: () =>
+                                _updateStatus(widget.docRef, 'active'),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      icon: const Icon(Icons.check),
-                      label: const Text('قبول'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () => _updateStatus(widget.docRef, 'active'),
-                    ),
-                  ),
-                ],
-              ),
             ),
             body: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
@@ -113,26 +129,51 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(name, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                              Text(
+                                name,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
                               const SizedBox(height: 8),
                               Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
                                 children: [
-                                  ChipLabel(icon: Icons.person_outline, label: type == 'technician' ? 'عامل' : 'مستخدم'),
-                                  ChipLabel(icon: Icons.workspace_premium, label: plan.isEmpty ? 'خطة غير معروفة' : plan),
+                                  ChipLabel(
+                                    icon: Icons.person_outline,
+                                    label: type == 'technician'
+                                        ? 'عامل'
+                                        : 'مستخدم',
+                                  ),
+                                  ChipLabel(
+                                    icon: Icons.workspace_premium,
+                                    label: plan.isEmpty
+                                        ? 'خطة غير معروفة'
+                                        : plan,
+                                  ),
                                   if (isFirstTime is bool)
-                                    ChipLabel(icon: Icons.fiber_new, label: isFirstTime ? 'أول مرة' : 'ليس أول مرة'),
+                                    ChipLabel(
+                                      icon: Icons.fiber_new,
+                                      label: isFirstTime
+                                          ? 'أول مرة'
+                                          : 'ليس أول مرة',
+                                    ),
                                   if (createdAt != null)
-                                    ChipLabel(icon: Icons.event, label: formatDate(createdAt)),
+                                    ChipLabel(
+                                      icon: Icons.event,
+                                      label: formatDate(createdAt),
+                                    ),
                                 ],
                               ),
                               const SizedBox(height: 12),
                               if (bio.isNotEmpty)
-                                Text(bio, style: Theme.of(context).textTheme.bodyMedium),
+                                Text(
+                                  bio,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -142,11 +183,31 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        InfoRow(icon: Icons.email, label: 'الإيميل', value: email),
-                        InfoRow(icon: Icons.phone, label: 'الهاتف', value: phone),
-                        InfoRow(icon: Icons.location_city, label: 'المدينة', value: city),
-                        InfoRow(icon: Icons.map, label: 'المحافظة / الولاية', value: state),
-                        InfoRow(icon: Icons.flag, label: 'الدولة', value: country),
+                        InfoRow(
+                          icon: Icons.email,
+                          label: 'الإيميل',
+                          value: email,
+                        ),
+                        InfoRow(
+                          icon: Icons.phone,
+                          label: 'الهاتف',
+                          value: phone,
+                        ),
+                        InfoRow(
+                          icon: Icons.location_city,
+                          label: 'المدينة',
+                          value: city,
+                        ),
+                        InfoRow(
+                          icon: Icons.map,
+                          label: 'المحافظة / الولاية',
+                          value: state,
+                        ),
+                        InfoRow(
+                          icon: Icons.flag,
+                          label: 'الدولة',
+                          value: country,
+                        ),
                       ],
                     ),
                   ),
@@ -159,7 +220,10 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                           context: context,
                           builder: (_) => Dialog(
                             child: InteractiveViewer(
-                              child: Image.network(receiptImageUrl, fit: BoxFit.contain),
+                              child: Image.network(
+                                receiptImageUrl,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         );
@@ -197,18 +261,16 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     );
   }
 
-  Future<void> _showRejectionDialog(DocumentReference<Map<String, dynamic>> ref) async {
-    final TextEditingController reasonController = TextEditingController();
-
+  Future<void> _showRejectionDialog(
+    DocumentReference<Map<String, dynamic>> ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('سبب الرفض'),
         content: TextField(
           controller: reasonController,
-          decoration: const InputDecoration(
-            hintText: 'أدخل سبب الرفض هنا',
-          ),
+          decoration: const InputDecoration(hintText: 'أدخل سبب الرفض هنا'),
         ),
         actions: [
           TextButton(
@@ -217,7 +279,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('حفظ', style: TextStyle(color: Colors.red)),
+            child: const Text('إرسال', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -229,14 +291,30 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     await _updateStatus(ref, 'rejected', reason: reason);
   }
 
-  Future<void> _updateStatus(DocumentReference<Map<String, dynamic>> ref, String newStatus, {String? reason}) async {
+  Future<void> _updateStatus(
+    DocumentReference<Map<String, dynamic>> ref,
+    String newStatus, {
+    String? reason,
+  }) async {
+    if (reasonController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('فشل في الارسال يجب ملئ الحقل '),
+        ),
+      );
+      return;
+    }
+
     setState(() => isUpdating = true);
     try {
       await FirebaseFirestore.instance.runTransaction((tx) async {
         final snap = await tx.get(ref);
         if (!snap.exists) return;
         final data = snap.data() as Map<String, dynamic>;
-        final sub = Map<String, dynamic>.from((data['subscription'] ?? {}) as Map);
+        final sub = Map<String, dynamic>.from(
+          (data['subscription'] ?? {}) as Map,
+        );
         sub['status'] = newStatus;
         if (newStatus == 'active' && sub['startDate'] == null) {
           sub['startDate'] = Timestamp.now();
@@ -249,16 +327,19 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(newStatus == 'active' ? 'تم قبول الطلب' : 'تم رفض الطلب')),
+          SnackBar(
+            content: Text(
+              newStatus == 'active' ? 'تم قبول الطلب' : 'تم رفض الطلب',
+            ),
+          ),
         );
         Navigator.pop(context);
       }
-
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تعذر تحديث الحالة: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('تعذر تحديث الحالة: $e')));
       }
     } finally {
       if (mounted) {
@@ -279,7 +360,12 @@ class _BigAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: 36,
       backgroundImage: url.isNotEmpty ? NetworkImage(url) : null,
-      child: url.isEmpty ? Text(initials, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)) : null,
+      child: url.isEmpty
+          ? Text(
+              initials,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            )
+          : null,
     );
   }
 }

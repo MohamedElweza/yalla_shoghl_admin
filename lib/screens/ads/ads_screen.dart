@@ -26,7 +26,9 @@ class _AdsScreenState extends State<AdsScreen> {
   }
 
   void _checkInternetConnection() {
-    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
       setState(() {
         _isConnected = !results.contains(ConnectivityResult.none);
       });
@@ -41,7 +43,9 @@ class _AdsScreenState extends State<AdsScreen> {
 
       await supabase.storage.from("yalla.shogl").upload(filePath, file);
 
-      final publicUrl = supabase.storage.from("yalla.shogl").getPublicUrl(filePath);
+      final publicUrl = supabase.storage
+          .from("yalla.shogl")
+          .getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
       debugPrint("Upload error: $e");
@@ -104,7 +108,9 @@ class _AdsScreenState extends State<AdsScreen> {
             itemBuilder: (context, index) {
               final doc = adsDocs[index];
               final data = doc.data() as Map<String, dynamic>;
-              final imageGroups = List<Map<String, dynamic>>.from(data['imageUrls'] ?? []);
+              final imageGroups = List<Map<String, dynamic>>.from(
+                data['imageUrls'] ?? [],
+              );
 
               return Column(
                 children: imageGroups.map((group) {
@@ -124,7 +130,10 @@ class _AdsScreenState extends State<AdsScreen> {
                             children: [
                               Expanded(child: Text('ID: $id')),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () => _deleteAd(context, doc.id),
                               ),
                             ],
@@ -143,11 +152,12 @@ class _AdsScreenState extends State<AdsScreen> {
                           GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                ),
                             itemCount: images.length,
                             itemBuilder: (context, imgIndex) {
                               final imgUrl = images[imgIndex];
@@ -160,38 +170,55 @@ class _AdsScreenState extends State<AdsScreen> {
                                       fit: BoxFit.cover,
                                       width: double.infinity,
                                       height: double.infinity,
-                                      loadingBuilder: (context, child, progress) {
-                                        if (progress == null) return child;
-                                        return Shimmer.fromColors(
-                                          baseColor: Colors.grey.shade300,
-                                          highlightColor: Colors.grey.shade100,
-                                          child: Container(
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey.shade300,
-                                          child: const Icon(Icons.broken_image, color: Colors.red),
-                                        );
-                                      },
+                                      loadingBuilder:
+                                          (context, child, progress) {
+                                            if (progress == null) return child;
+                                            return Shimmer.fromColors(
+                                              baseColor: Colors.grey.shade300,
+                                              highlightColor:
+                                                  Colors.grey.shade100,
+                                              child: Container(
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Container(
+                                              color: Colors.grey.shade300,
+                                              child: const Icon(
+                                                Icons.broken_image,
+                                                color: Colors.red,
+                                              ),
+                                            );
+                                          },
                                     ),
                                   ),
                                   Positioned(
                                     top: 5,
                                     right: 5,
                                     child: GestureDetector(
-                                      onTap: () => _deleteImage(context, doc.id, imageGroups, group, imgIndex),
+                                      onTap: () => _deleteImage(
+                                        context,
+                                        doc.id,
+                                        imageGroups,
+                                        group,
+                                        imgIndex,
+                                      ),
                                       child: const CircleAvatar(
                                         radius: 14,
                                         backgroundColor: Colors.red,
-                                        child: Icon(Icons.close, size: 16, color: Colors.white),
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -201,7 +228,12 @@ class _AdsScreenState extends State<AdsScreen> {
                           ),
                           const SizedBox(height: 10),
                           ElevatedButton.icon(
-                            onPressed: () => _showAddImageDialog(context, doc.id, imageGroups, group),
+                            onPressed: () => _showAddImageDialog(
+                              context,
+                              doc.id,
+                              imageGroups,
+                              group,
+                            ),
                             icon: const Icon(Icons.add),
                             label: const Text('إضافة صورة'),
                           ),
@@ -222,7 +254,6 @@ class _AdsScreenState extends State<AdsScreen> {
     final idController = TextEditingController();
     final linkController = TextEditingController();
 
-
     showDialog(
       context: context,
       builder: (ctx) {
@@ -239,7 +270,9 @@ class _AdsScreenState extends State<AdsScreen> {
                   ),
                   TextField(
                     controller: linkController,
-                    decoration: const InputDecoration(labelText: 'رابط الإعلان'),
+                    decoration: const InputDecoration(
+                      labelText: 'رابط الإعلان',
+                    ),
                   ),
                 ],
               ),
@@ -252,34 +285,38 @@ class _AdsScreenState extends State<AdsScreen> {
                   onPressed: _isAdding
                       ? null
                       : () async {
-                    if (idController.text.isEmpty || linkController.text.isEmpty) return;
+                          if (idController.text.isEmpty ||
+                              linkController.text.isEmpty)
+                            return;
 
-                    setState(() => _isAdding = true);
+                          setState(() => _isAdding = true);
 
-                    final newAd = {
-                      'imageUrls': [
-                        {
-                          'id': idController.text.trim(),
-                          'externalUrl': linkController.text.trim(),
-                          'imgUrl': []
-                        }
-                      ]
-                    };
+                          final newAd = {
+                            'imageUrls': [
+                              {
+                                'id': idController.text.trim(),
+                                'externalUrl': linkController.text.trim(),
+                                'imgUrl': [],
+                              },
+                            ],
+                          };
 
-                    await FirebaseFirestore.instance.collection('ads').add(newAd);
+                          await FirebaseFirestore.instance
+                              .collection('ads')
+                              .add(newAd);
 
-                    setState(() => _isAdding = false);
-                    Navigator.pop(ctx);
-                  },
+                          setState(() => _isAdding = false);
+                          Navigator.pop(ctx);
+                        },
                   child: _isAdding
                       ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text('إضافة'),
                 ),
               ],
@@ -290,8 +327,12 @@ class _AdsScreenState extends State<AdsScreen> {
     );
   }
 
-
-  void _showAddImageDialog(BuildContext context, String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup) {
+  void _showAddImageDialog(
+    BuildContext context,
+    String docId,
+    List<Map<String, dynamic>> imageGroups,
+    Map<String, dynamic> targetGroup,
+  ) {
     final linkController = TextEditingController();
 
     showDialog(
@@ -306,12 +347,19 @@ class _AdsScreenState extends State<AdsScreen> {
               label: const Text("اختيار من الجهاز"),
               onPressed: () async {
                 final picker = ImagePicker();
-                final picked = await picker.pickImage(source: ImageSource.gallery);
+                final picked = await picker.pickImage(
+                  source: ImageSource.gallery,
+                );
                 if (picked != null) {
                   final file = File(picked.path);
                   final url = await _uploadImageToSupabase(file, "ads");
                   if (url != null) {
-                    _saveImageUrlToFirestore(docId, imageGroups, targetGroup, url);
+                    _saveImageUrlToFirestore(
+                      docId,
+                      imageGroups,
+                      targetGroup,
+                      url,
+                    );
                   }
                 }
                 Navigator.pop(ctx);
@@ -325,11 +373,19 @@ class _AdsScreenState extends State<AdsScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
           ElevatedButton(
             onPressed: () {
               if (linkController.text.isNotEmpty) {
-                _saveImageUrlToFirestore(docId, imageGroups, targetGroup, linkController.text.trim());
+                _saveImageUrlToFirestore(
+                  docId,
+                  imageGroups,
+                  targetGroup,
+                  linkController.text.trim(),
+                );
               }
               Navigator.pop(ctx);
             },
@@ -340,13 +396,23 @@ class _AdsScreenState extends State<AdsScreen> {
     );
   }
 
-  void _saveImageUrlToFirestore(String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup, String url) async {
+  void _saveImageUrlToFirestore(
+    String docId,
+    List<Map<String, dynamic>> imageGroups,
+    Map<String, dynamic> targetGroup,
+    String url,
+  ) async {
     final updatedGroup = Map<String, dynamic>.from(targetGroup);
-    final updatedImages = List<String>.from(updatedGroup['imgUrl'] ?? [])..add(url);
+    final updatedImages = List<String>.from(updatedGroup['imgUrl'] ?? [])
+      ..add(url);
     updatedGroup['imgUrl'] = updatedImages;
 
-    final updatedGroups = imageGroups.map((g) => g == targetGroup ? updatedGroup : g).toList();
-    await FirebaseFirestore.instance.collection('ads').doc(docId).update({'imageUrls': updatedGroups});
+    final updatedGroups = imageGroups
+        .map((g) => g == targetGroup ? updatedGroup : g)
+        .toList();
+    await FirebaseFirestore.instance.collection('ads').doc(docId).update({
+      'imageUrls': updatedGroups,
+    });
   }
 
   void _deleteAd(BuildContext context, String docId) async {
@@ -356,8 +422,14 @@ class _AdsScreenState extends State<AdsScreen> {
         title: const Text('تأكيد الحذف'),
         content: const Text('هل أنت متأكد من حذف هذا الإعلان بالكامل؟'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('حذف'),
+          ),
         ],
       ),
     );
@@ -367,26 +439,43 @@ class _AdsScreenState extends State<AdsScreen> {
     }
   }
 
-  void _deleteImage(BuildContext context, String docId, List<Map<String, dynamic>> imageGroups, Map<String, dynamic> targetGroup, int indexToRemove) async {
+  void _deleteImage(
+    BuildContext context,
+    String docId,
+    List<Map<String, dynamic>> imageGroups,
+    Map<String, dynamic> targetGroup,
+    int indexToRemove,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('تأكيد الحذف'),
         content: const Text('هل أنت متأكد من حذف هذه الصورة؟'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('حذف'),
+          ),
         ],
       ),
     );
 
     if (confirmed == true) {
       final updatedGroup = Map<String, dynamic>.from(targetGroup);
-      final updatedImages = List<String>.from(updatedGroup['imgUrl'] ?? [])..removeAt(indexToRemove);
+      final updatedImages = List<String>.from(updatedGroup['imgUrl'] ?? [])
+        ..removeAt(indexToRemove);
       updatedGroup['imgUrl'] = updatedImages;
 
-      final updatedGroups = imageGroups.map((g) => g == targetGroup ? updatedGroup : g).toList();
-      await FirebaseFirestore.instance.collection('ads').doc(docId).update({'imageUrls': updatedGroups});
+      final updatedGroups = imageGroups
+          .map((g) => g == targetGroup ? updatedGroup : g)
+          .toList();
+      await FirebaseFirestore.instance.collection('ads').doc(docId).update({
+        'imageUrls': updatedGroups,
+      });
     }
   }
 }

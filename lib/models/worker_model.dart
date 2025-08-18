@@ -11,7 +11,6 @@ class WorkerModel extends BaseUser {
   final String cityName;
   final List<ServiceModel> services;
 
-
   WorkerModel({
     required super.id,
     required super.name,
@@ -53,7 +52,6 @@ class WorkerModel extends BaseUser {
           );
         }).toList() ??
         <ServiceModel>[];
-
 
     return WorkerModel(
       id: id,

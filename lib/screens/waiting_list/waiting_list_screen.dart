@@ -23,25 +23,47 @@ class _PendingRequestsPageState extends State<PendingRequestsPage> {
   String _query = '';
   bool _isConnected = true;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  final _mergedController = StreamController<List<QueryDocumentSnapshot>>();
 
   @override
   void initState() {
     super.initState();
     _startConnectivityCheck();
+    _mergeStreams();
+  }
+
+  void _mergeStreams() {
+    final workersStream = FirebaseFirestore.instance
+        .collection('workers')
+        .where('subscription.status', isEqualTo: 'pending')
+        .snapshots();
+
+    final usersStream = FirebaseFirestore.instance
+        .collection('users')
+        .where('subscription.status', isEqualTo: 'pending')
+        .snapshots();
+
+    workersStream.listen((workerSnapshot) {
+      usersStream.listen((userSnapshot) {
+        final combinedDocs = [...workerSnapshot.docs, ...userSnapshot.docs];
+        combinedDocs.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
+        _mergedController.add(combinedDocs);
+      });
+    });
   }
 
   void _startConnectivityCheck() {
-    _connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen((result) {
-          setState(() {
-            _isConnected = result != ConnectivityResult.none;
-          });
-        });
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      result,
+    ) {
+      setState(() {
+        _isConnected = result.contains(ConnectivityResult.none) ? false : true;
+      });
+    });
 
-    // Initial check
     Connectivity().checkConnectivity().then((result) {
       setState(() {
-        _isConnected = result != ConnectivityResult.none;
+        _isConnected = result.contains(ConnectivityResult.none) ? false : true;
       });
     });
   }
@@ -49,6 +71,7 @@ class _PendingRequestsPageState extends State<PendingRequestsPage> {
   @override
   void dispose() {
     _connectivitySubscription.cancel();
+    _mergedController.close();
     super.dispose();
   }
 
@@ -89,108 +112,107 @@ class _PendingRequestsPageState extends State<PendingRequestsPage> {
             ),
             Expanded(
               child: _isConnected
-                  ? StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance
-                    .collection('workers')
-                    .where('subscription.status', isEqualTo: 'pending')
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
-                builder: (context, snap) {
-                  if (snap.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                        child: CircularProgressIndicator());
-                  }
-                  if (snap.hasError) {
-                    return Center(
-                        child: Text('حدث خطأ: ${snap.error}'));
-                  }
-                  final docs = snap.data?.docs ?? [];
+                  ? StreamBuilder<List<QueryDocumentSnapshot>>(
+                      // Corrected StreamBuilder type
+                      stream: _mergedController.stream, // Use the merged stream
+                      builder: (context, snap) {
+                        if (snap.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        if (snap.hasError) {
+                          return Center(child: Text('حدث خطأ: ${snap.error}'));
+                        }
+                        final docs = snap.data ?? [];
 
-                  // Local filtering by _query
-                  final filtered = docs.where((d) {
-                    final data = d.data();
-                    final name =
-                    (data['name'] ?? '').toString().toLowerCase();
-                    final email =
-                    (data['email'] ?? '').toString().toLowerCase();
-                    final phone =
-                    (data['phone'] ?? '').toString().toLowerCase();
-                    return _query.isEmpty ||
-                        name.contains(_query) ||
-                        email.contains(_query) ||
-                        phone.contains(_query);
-                  }).toList();
+                        final filtered = docs.where((d) {
+                          final data = d.data() as Map<String, dynamic>;
+                          final name = (data['name'] ?? '')
+                              .toString()
+                              .toLowerCase();
+                          final email = (data['email'] ?? '')
+                              .toString()
+                              .toLowerCase();
+                          final phone = (data['phone'] ?? '')
+                              .toString()
+                              .toLowerCase();
+                          return _query.isEmpty ||
+                              name.contains(_query) ||
+                              email.contains(_query) ||
+                              phone.contains(_query);
+                        }).toList();
 
-                  if (filtered.isEmpty) {
-                    return const EmptyState();
-                  }
+                        if (filtered.isEmpty) {
+                          return const EmptyState();
+                        }
 
-                  return ListView.separated(
-                    padding:
-                    const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) =>
-                    const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      final doc = filtered[i];
-                      final data = doc.data();
-                      final avatarUrl = (data['profileImageUrl'] ??
-                          data['imageUrl'] ??
-                          '')
-                          .toString();
-                      final name =
-                      (data['name'] ?? 'بدون اسم').toString();
-                      final email =
-                      (data['email'] ?? '').toString();
-                      final phone =
-                      (data['phone'] ?? '').toString();
+                        return ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, i) {
+                            final doc = filtered[i];
+                            final data = doc.data() as Map<String, dynamic>;
+                            final avatarUrl =
+                                (data['profileImageUrl'] ??
+                                        data['imageUrl'] ??
+                                        '')
+                                    .toString();
+                            final name = (data['name'] ?? 'بدون اسم')
+                                .toString();
+                            final email = (data['email'] ?? '').toString();
+                            final phone = (data['phone'] ?? '').toString();
 
-                      return GlassCard(
-                        child: ListTile(
-                          leading:
-                          _Avatar(url: avatarUrl, name: name),
-                          title: Text(
-                            name,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                            children: [
-                              if (email.isNotEmpty) Text(email),
-                              if (phone.isNotEmpty) Text(phone),
-                              const SizedBox(height: 6),
-                              const Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  StatusBadge(status: 'pending'),
-                                ],
+                            return GlassCard(
+                              child: ListTile(
+                                leading: _Avatar(url: avatarUrl, name: name),
+                                title: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (email.isNotEmpty) Text(email),
+                                    if (phone.isNotEmpty) Text(phone),
+                                    const SizedBox(height: 6),
+                                    const Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        StatusBadge(status: 'pending'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => RequestDetailsPage(
+                                      docRef:
+                                          doc.reference
+                                              as DocumentReference<
+                                                Map<String, dynamic>
+                                              >,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          trailing:
-                          const Icon(Icons.chevron_right),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => RequestDetailsPage(
-                                  docRef: doc.reference),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              )
+                            );
+                          },
+                        );
+                      },
+                    )
                   : const Center(
-                child: Text(
-                  '📡 يرجى الاتصال بالإنترنت لعرض الطلبات',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
+                      child: Text(
+                        '📡 يرجى الاتصال بالإنترنت لعرض الطلبات',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
             ),
           ],
         ),

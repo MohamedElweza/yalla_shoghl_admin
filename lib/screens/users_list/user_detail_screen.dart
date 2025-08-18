@@ -58,9 +58,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       _initializeControllers(userData!);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ فشل تحميل البيانات: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ فشل تحميل البيانات: $e')));
       }
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -72,8 +72,12 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     controllers['email'] = TextEditingController(text: data['email'] ?? '');
     controllers['phone'] = TextEditingController(text: data['phone'] ?? '');
     controllers['bio'] = TextEditingController(text: data['bio'] ?? '');
-    controllers['cityName'] = TextEditingController(text: data['cityName'] ?? '');
-    controllers['governorateName'] = TextEditingController(text: data['governorateName'] ?? '');
+    controllers['cityName'] = TextEditingController(
+      text: data['cityName'] ?? '',
+    );
+    controllers['governorateName'] = TextEditingController(
+      text: data['governorateName'] ?? '',
+    );
   }
 
   Future<void> _updateUser() async {
@@ -91,7 +95,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       if (widget.isWorker) {
         updatedData['bio'] = controllers['bio']?.text.trim();
         updatedData['cityName'] = controllers['cityName']?.text.trim();
-        updatedData['governorateName'] = controllers['governorateName']?.text.trim();
+        updatedData['governorateName'] = controllers['governorateName']?.text
+            .trim();
       }
 
       await FirebaseFirestore.instance
@@ -105,9 +110,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل التحديث: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ فشل التحديث: $e')));
     } finally {
       if (mounted) setState(() => isProcessing = false);
     }
@@ -166,50 +171,58 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
               children: [
-                _buildTextField('name', 'الاسم'),
-                const SizedBox(height: 12),
-                _buildTextField('email', 'البريد الإلكتروني'),
-                const SizedBox(height: 12),
-                _buildTextField('phone', 'رقم الهاتف', keyboardType: TextInputType.phone),
-                const SizedBox(height: 12),
-                if (widget.isWorker) ...[
-                  _buildTextField('bio', 'الوصف / النبذة'),
-                  const SizedBox(height: 12),
-                  _buildTextField('cityName', 'المدينة'),
-                  const SizedBox(height: 12),
-                  _buildTextField('governorateName', 'المحافظة'),
-                  const SizedBox(height: 12),
-                ],
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: isProcessing ? null : _updateUser,
-                  icon: const Icon(Icons.save),
-                  label: const Text('تحديث البيانات'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(48),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _buildTextField('name', 'الاسم'),
+                      const SizedBox(height: 12),
+                      _buildTextField('email', 'البريد الإلكتروني'),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        'phone',
+                        'رقم الهاتف',
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 12),
+                      if (widget.isWorker) ...[
+                        _buildTextField('bio', 'الوصف / النبذة'),
+                        const SizedBox(height: 12),
+                        _buildTextField('cityName', 'المدينة'),
+                        const SizedBox(height: 12),
+                        _buildTextField('governorateName', 'المحافظة'),
+                        const SizedBox(height: 12),
+                      ],
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: isProcessing ? null : _updateUser,
+                        icon: const Icon(Icons.save),
+                        label: const Text('تحديث البيانات'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryPurple,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                if (isProcessing)
+                  Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
               ],
             ),
-          ),
-          if (isProcessing)
-            Container(
-              color: Colors.black.withOpacity(0.3),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        ],
-      ),
     );
   }
 
-  Widget _buildTextField(String key, String label, {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    String key,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextField(
       controller: controllers[key],
       keyboardType: keyboardType,

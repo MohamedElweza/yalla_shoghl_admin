@@ -85,82 +85,106 @@ class _UsersListScreenState extends State<UsersListScreen> {
         ),
         body: !_hasInternet
             ? const Center(
-          child: Text(
-            '⚠ لا يوجد اتصال بالإنترنت',
-            style: TextStyle(fontSize: 18, color: Colors.red),
-          ),
-        )
-            : Column(
-          children: [
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'ابحث بالاسم...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+                child: Text(
+                  '⚠ لا يوجد اتصال بالإنترنت',
+                  style: TextStyle(fontSize: 18, color: Colors.red),
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value.trim();
-                  });
-                },
-              ),
-            ),
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: query.snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('حدث خطأ: ${snapshot.error}'));
-                  }
-
-                  final docs = snapshot.data?.docs ?? [];
-                  // Filter by name
-                  final filteredDocs = docs.where((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    final name = (data['name'] ?? '').toString();
-                    return name.contains(searchQuery) ||
-                        name.toLowerCase().contains(searchQuery.toLowerCase());
-                  }).toList();
-
-                  if (filteredDocs.isEmpty) {
-                    return Center(
-                      child: Text(
-                        widget.showWorkers ? 'لا يوجد عمال' : 'لا يوجد عملاء',
-                        style: Theme.of(context).textTheme.bodyLarge,
+              )
+            : Column(
+                children: [
+                  // Search bar
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'ابحث بالاسم...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                    );
-                  }
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value.trim();
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: query.snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text('حدث خطأ: ${snapshot.error}'),
+                          );
+                        }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredDocs.length,
-                    itemBuilder: (context, index) {
-                      final data = filteredDocs[index].data() as Map<String, dynamic>;
-                      final id = filteredDocs[index].id;
-                      return _buildUserCard(context, data, id, widget.showWorkers);
-                    },
-                  );
-                },
+                        final docs = snapshot.data?.docs ?? [];
+                        // Filter by name
+                        final filteredDocs = docs.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final name = (data['name'] ?? '').toString();
+                          return name.contains(searchQuery) ||
+                              name.toLowerCase().contains(
+                                searchQuery.toLowerCase(),
+                              );
+                        }).toList();
+
+                        if (filteredDocs.isEmpty) {
+                          return Center(
+                            child: Text(
+                              widget.showWorkers
+                                  ? 'لا يوجد عمال'
+                                  : 'لا يوجد عملاء',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: filteredDocs.length,
+                          itemBuilder: (context, index) {
+                            final data =
+                                filteredDocs[index].data()
+                                    as Map<String, dynamic>;
+                            final id = filteredDocs[index].id;
+                            return _buildUserCard(
+                              context,
+                              data,
+                              id,
+                              widget.showWorkers,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildUserCard(BuildContext context, Map<String, dynamic> user, String id, bool showWorkers) {
+  Widget _buildUserCard(
+    BuildContext context,
+    Map<String, dynamic> user,
+    String id,
+    bool showWorkers,
+  ) {
     final name = user['name'] ?? 'بدون اسم';
     final phone = user['phone'] ?? 'غير متوفر';
     final imageUrl = user['imageUrl'] ?? '';
@@ -173,10 +197,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => UserDetailScreen(
-              userId: id,
-              isWorker: showWorkers,
-            ),
+            builder: (_) => UserDetailScreen(userId: id, isWorker: showWorkers),
           ),
         );
       },
@@ -235,9 +256,9 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   const SizedBox(height: 4),
                   Text(
                     phone,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[800],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[800]),
                   ),
                   const SizedBox(height: 8),
                   if (showWorkers) ...[
@@ -252,8 +273,14 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text('الخدمة: $service', style: const TextStyle(fontSize: 12)),
-                    Text('عدد التقييمات: $ratingCount', style: const TextStyle(fontSize: 12)),
+                    Text(
+                      'الخدمة: $service',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      'عدد التقييمات: $ratingCount',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ],
               ),

@@ -10,7 +10,7 @@ class AppColors {
   static const Color lightGreyBackground = Color(0xFFF5F5F5);
   static const Color borderColor = Colors.grey;
   static const Color starColor = Colors.amber;
-  
+
   static const Color primaryPurple = Color(0xFF9C27B0); // Darker purple
   static const Color deepPurple = Color(0xFF673AB7);
   static const Color lightGrey = Color(0xFFF5F5F5); // Colors.grey[100]

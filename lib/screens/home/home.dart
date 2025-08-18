@@ -53,10 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (await _hasInternet(context)) {
       setState(() => _isLoading = false);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => screen),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     } else {
       setState(() => _isLoading = false);
     }
@@ -89,7 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.engineering,
                     color: Colors.teal,
                     onTap: () {
-                      _navigateTo(context, const UsersListScreen(showWorkers: true));
+                      _navigateTo(
+                        context,
+                        const UsersListScreen(showWorkers: true),
+                      );
                     },
                   ),
                   _AdminOptionCard(
@@ -97,7 +97,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.person_outline,
                     color: Colors.deepPurple,
                     onTap: () {
-                      _navigateTo(context, const UsersListScreen(showWorkers: false));
+                      _navigateTo(
+                        context,
+                        const UsersListScreen(showWorkers: false),
+                      );
                     },
                   ),
                   _AdminOptionCard(

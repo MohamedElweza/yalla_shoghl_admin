@@ -9,7 +9,6 @@ class AppConstants {
   static const String specialOfferAvailability = 'متوفر حتى منتصف الليل';
   static const String servicesSectionTitle = 'الخدمات';
 
-
   static const String appSlogan = 'كل ما تحتاجه في مكان واحد'; // شعار للدرج
   static const String aboutUs = 'عن التطبيق';
   static const String privacyPolicy = 'سياسة الخصوصية';
@@ -36,7 +35,7 @@ class AppConstants {
   static const String georginaImage = 'assets/georgina.jpg';
   static const String titusImage = 'assets/titus.jpg';
   static const String cleaningLadyAsset = 'assets/cleaning_lady.png';
-  
+
   static const String ratesAndComments = 'التقييمات والتعليقات'; // New
 
   // New demo user avatars for reviews

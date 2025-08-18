@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-
 String _two(int n) => n.toString().padLeft(2, '0');
 
 String formatDate(dynamic v) {

@@ -53,9 +53,9 @@ class ServicesScreen extends StatelessWidget {
   Future<bool> _checkInternet(BuildContext context) async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يوجد اتصال بالإنترنت')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('لا يوجد اتصال بالإنترنت')));
       return false;
     }
     return true;
@@ -80,7 +80,9 @@ class ServicesScreen extends StatelessWidget {
                   children: [
                     TextField(
                       controller: labelController,
-                      decoration: const InputDecoration(labelText: 'اسم الخدمة'),
+                      decoration: const InputDecoration(
+                        labelText: 'اسم الخدمة',
+                      ),
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<IconData>(
@@ -100,7 +102,9 @@ class ServicesScreen extends StatelessWidget {
                       onChanged: (icon) {
                         if (icon != null) setState(() => selectedIcon = icon);
                       },
-                      decoration: const InputDecoration(labelText: 'اختر الأيقونة'),
+                      decoration: const InputDecoration(
+                        labelText: 'اختر الأيقونة',
+                      ),
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<Color>(
@@ -110,7 +114,11 @@ class ServicesScreen extends StatelessWidget {
                           value: entry.value,
                           child: Row(
                             children: [
-                              Container(width: 20, height: 20, color: entry.value),
+                              Container(
+                                width: 20,
+                                height: 20,
+                                color: entry.value,
+                              ),
                               const SizedBox(width: 8),
                               Text(entry.key),
                             ],
@@ -118,9 +126,12 @@ class ServicesScreen extends StatelessWidget {
                         );
                       }).toList(),
                       onChanged: (color) {
-                        if (color != null) setState(() => selectedColor = color);
+                        if (color != null)
+                          setState(() => selectedColor = color);
                       },
-                      decoration: const InputDecoration(labelText: 'اختر اللون'),
+                      decoration: const InputDecoration(
+                        labelText: 'اختر اللون',
+                      ),
                     ),
                   ],
                 ),
@@ -134,30 +145,35 @@ class ServicesScreen extends StatelessWidget {
                   onPressed: isLoading
                       ? null
                       : () async {
-                    if (!await _checkInternet(context)) return;
+                          if (!await _checkInternet(context)) return;
 
-                    final label = labelController.text.trim();
-                    if (label.isEmpty) return;
+                          final label = labelController.text.trim();
+                          if (label.isEmpty) return;
 
-                    setState(() => isLoading = true);
+                          setState(() => isLoading = true);
 
-                    final data = {
-                      'label': label,
-                      'iconCodePoint': selectedIcon.codePoint,
-                      'colorValue': selectedColor.value,
-                    };
+                          final data = {
+                            'label': label,
+                            'iconCodePoint': selectedIcon.codePoint,
+                            'colorValue': selectedColor.value,
+                          };
 
-                    await FirebaseFirestore.instance.collection('services').add(data);
+                          await FirebaseFirestore.instance
+                              .collection('services')
+                              .add(data);
 
-                    setState(() => isLoading = false);
-                    Navigator.pop(context);
-                  },
+                          setState(() => isLoading = false);
+                          Navigator.pop(context);
+                        },
                   child: isLoading
                       ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text('إضافة'),
                 ),
               ],
@@ -187,23 +203,29 @@ class ServicesScreen extends StatelessWidget {
                 onPressed: isDeleting
                     ? null
                     : () async {
-                  if (!await _checkInternet(context)) return;
+                        if (!await _checkInternet(context)) return;
 
-                  setState(() => isDeleting = true);
-                  await doc.reference.delete();
-                  Navigator.pop(context);
-                },
+                        setState(() => isDeleting = true);
+                        await doc.reference.delete();
+                        Navigator.pop(context);
+                      },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: isDeleting
                     ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
                     : const Text(
-                  'حذف',
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                ),
+                        'حذف',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ],
           );
@@ -239,7 +261,8 @@ class ServicesScreen extends StatelessWidget {
           stream: FirebaseFirestore.instance.collection('services').snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) return const Center(child: Text('حدث خطأ'));
-            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            if (!snapshot.hasData)
+              return const Center(child: CircularProgressIndicator());
 
             final services = snapshot.data!.docs;
 
