@@ -4,8 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:yalla_shogl_admin/screens/home/home.dart';
-import 'package:yalla_shogl_admin/screens/registration/signin_screen.dart';
 import 'package:yalla_shogl_admin/screens/splash_screen/splash.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/password_visibility_provider.dart';
@@ -34,7 +32,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static const title = 'ادارة يلا شغل';
+  static const title = 'إدارة يلا شغل';
 
   @override
   Widget build(BuildContext context) {

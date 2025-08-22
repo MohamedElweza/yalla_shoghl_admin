@@ -3,9 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
 
-import 'package:yalla_shogl_admin/screens/waiting_list/widgets/chip_label.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/empty_state.dart';
-import 'package:yalla_shogl_admin/screens/waiting_list/widgets/form_date.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/glass_card.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/initial_form_name.dart';
 import 'package:yalla_shogl_admin/screens/waiting_list/widgets/status_badge.dart';

@@ -54,15 +54,15 @@ class _AdsScreenState extends State<AdsScreen> {
   }
 
   /// Get receipt image from Supabase using document ID
-  Future<String?> _getReceiptImageUrl(String docId) async {
-    try {
-      final filePath = "receipt/$docId.jpg";
-      return supabase.storage.from("yalla.shogl").getPublicUrl(filePath);
-    } catch (e) {
-      debugPrint("Error getting receipt: $e");
-      return null;
-    }
-  }
+  // Future<String?> _getReceiptImageUrl(String docId) async {
+  //   try {
+  //     final filePath = "receipt/$docId.jpg";
+  //     return supabase.storage.from("yalla.shogl").getPublicUrl(filePath);
+  //   } catch (e) {
+  //     debugPrint("Error getting receipt: $e");
+  //     return null;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

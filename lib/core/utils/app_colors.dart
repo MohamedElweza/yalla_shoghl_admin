@@ -22,7 +22,7 @@ class AppColors {
   static const Color orangeWarning = Color(0xFFFF9800); // Colors.orange
 
   static const BoxShadow cardShadow = BoxShadow(
-    color: Color.fromARGB(25, 0, 0, 0), // grey.withOpacity(0.1)
+    color: Color.fromARGB(25, 0, 0, 0), // grey.withValues(alpha:0.1)
     blurRadius: 10,
     spreadRadius: 1,
   );

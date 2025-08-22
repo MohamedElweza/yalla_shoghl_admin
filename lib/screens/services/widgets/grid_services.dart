@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:yalla_shogl_admin/screens/services/widgets/service_icon.dart';
-import '../../users_list/users_list_screen.dart';
 
 @immutable
 class ServicesGrid extends StatelessWidget {

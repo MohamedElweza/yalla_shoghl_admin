@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 String initialsFromName(String name) {
   final parts = name.trim().split(RegExp(r"\s+"));

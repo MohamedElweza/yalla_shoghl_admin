@@ -278,7 +278,18 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
             child: const Text('إلغاء'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.red,
+                    content: Text('فشل في الارسال يجب ملئ الحقل '),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context, true);
+            },
             child: const Text('إرسال', style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -296,16 +307,6 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     String newStatus, {
     String? reason,
   }) async {
-    if (reasonController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text('فشل في الارسال يجب ملئ الحقل '),
-        ),
-      );
-      return;
-    }
-
     setState(() => isUpdating = true);
     try {
       await FirebaseFirestore.instance.runTransaction((tx) async {
